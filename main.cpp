@@ -96,15 +96,12 @@ void aStar(std::vector<std::vector<int>> maze, std::pair<int,int> start, std::pa
     std::map<std::pair<int,int>, std::pair<int,int>> parents;
     
     std::priority_queue <std::pair<int,std::pair<int,int>>, std::vector<std::pair<int,std::pair<int,int>>>, std::greater<std::pair<int,std::pair<int,int>>>> cola;
-
-    cola.push({costo[start],start});
     costo[start] = 0;
+    cola.push({costo[start],start});
+    
 
     while(!cola.empty()){
         std::pair<int,int> actual = cola.top().second;
-        if(actual == goal){
-            break;
-        }
         cola.pop();
 
         std::pair<int,int> arriba = {actual.first-1, actual.second};
@@ -113,38 +110,42 @@ void aStar(std::vector<std::vector<int>> maze, std::pair<int,int> start, std::pa
         std::pair<int,int> izquierda = {actual.first, actual.second-1};
         
         if(arriba.first >-1){
-            int fN = maze[arriba.first][arriba.second] + abs(arriba.first - goal.first) + abs(arriba.second - goal.second);
-            if(costo[arriba] > costo[actual] + fN && parents[actual] != arriba){
-                costo[arriba] = costo[actual] + fN;
-                cola.push({costo[arriba],arriba});   
+            int hN = abs(arriba.first - goal.first) + abs(arriba.second - goal.second);
+            int gN = costo[actual] + maze[arriba.first][arriba.second];
+            if(costo[arriba] > gN && parents[actual] != arriba){
+                costo[arriba] = gN;
+                cola.push({gN+hN,arriba});   
                 parents[arriba] = actual;
             }
         }
         
 
         if(abajo.first < 9){
-            int fN = maze[abajo.first][abajo.second] + abs(abajo.first - goal.first) + abs(abajo.second - goal.second);
-            if(costo[abajo] > costo[actual] + fN && parents[actual] != abajo){
-                costo[abajo] = costo[actual] + fN;
-                cola.push({costo[abajo], abajo}); 
+            int hN = abs(abajo.first - goal.first) + abs(abajo.second - goal.second);
+            int gN = costo[actual] + maze[abajo.first][abajo.second];
+            if(costo[abajo] > gN && parents[actual] != abajo){
+                costo[abajo] = gN;
+                cola.push({gN+hN, abajo}); 
                 parents[abajo] = actual;
-                }
+            }
         }
         
         if(derecha.second < 15){
-            int fN = maze[derecha.first][derecha.second] + abs(derecha.first - goal.first) + abs(derecha.second - goal.second);
-            if(costo[derecha] > costo[actual] + fN && parents[actual] != derecha){
-                costo[derecha] = costo[actual] + fN;
-                cola.push({costo[derecha], derecha});
+            int hN = abs(derecha.first - goal.first) + abs(derecha.second - goal.second);
+            int gN = costo[actual]+ maze[derecha.first][derecha.second];
+            if(costo[derecha] > gN && parents[actual] != derecha){
+                costo[derecha] = gN;
+                cola.push({gN+hN, derecha});
                 parents[derecha] = actual;
             }
         }
         
         if(izquierda.second > -1){
-            int fN = maze[izquierda.first][izquierda.second] + abs(izquierda.first - goal.first) + abs(izquierda.second - goal.second);
-            if(costo[izquierda] > costo[actual] + fN && parents[actual] != izquierda){
-                costo[izquierda] = costo[actual] + fN;
-                cola.push({costo[izquierda], izquierda}); 
+            int hN = abs(izquierda.first - goal.first) + abs(izquierda.second - goal.second);
+            int gN = costo[actual] + maze[izquierda.first][izquierda.second];
+            if(costo[izquierda] > gN && parents[actual] != izquierda){
+                costo[izquierda] =  gN;
+                cola.push({gN+hN, izquierda}); 
                 parents[izquierda] = actual;
             }
         }
