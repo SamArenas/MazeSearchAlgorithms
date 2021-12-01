@@ -7,6 +7,7 @@
 #include <limits.h>
 #include <math.h>
 #include <sys/time.h>
+#include <stack>
 using std::ifstream;
 
 std::pair<int,int> goal = {8,0}; //8,0
@@ -42,6 +43,24 @@ std::map<std::pair<int,int>, int> llenarCostos(){
     return costo;
 }
 
+void generarRutaUniforme(std::map<std::pair<int,int>, std::pair<int,int>>& parents, std::map<std::pair<int,int>, int>& costo ){
+    std::stack<std::pair<int,int>> orden;
+    while(goal != start){
+        std::pair<int,int> temp = goal;
+        orden.push(temp);
+        goal = parents[goal];
+    }
+    orden.push(start);
+    
+    std::cout<<"\n********************RUTA OPTIMA**************************\n";
+    int count = 1;
+    while(!orden.empty()){
+         std::cout<<count++<<". Costo: "<<costo[orden.top()]<<"  Nodo: ("<<orden.top().first<< ", "<< orden.top().second<< ") -> \n"; 
+         orden.pop();
+    }
+    std::cout<<"FIN";
+}
+
 void generarHijoUniforme(std::pair<int,int>& hijo, std::pair<int,int>& actual, auto& cola, std::map<std::pair<int,int>, int>& costo, std::map<std::pair<int,int>, std::pair<int,int>>& parents ){
     if(hijo.first<0|| hijo.first>8 || hijo.second>14 || hijo.second<0){
         return;
@@ -60,7 +79,6 @@ void generarHijoUniforme(std::pair<int,int>& hijo, std::pair<int,int>& actual, a
 void costoUniforme(std::vector<std::vector<int>> maze, std::pair<int,int> start, std::pair<int,int> goal){
     std::map<std::pair<int,int>, int> costo = llenarCostos();
     std::map<std::pair<int,int>, std::pair<int,int>> parents;
-    
     std::priority_queue <std::pair<int,std::pair<int,int>>, std::vector<std::pair<int,std::pair<int,int>>>, std::greater<std::pair<int,std::pair<int,int>>>> cola;
 
     cola.push({costo[start],start});
@@ -71,11 +89,12 @@ void costoUniforme(std::vector<std::vector<int>> maze, std::pair<int,int> start,
         cola.pop();
 
         std::cout<<"\nNODO ACTUAL: ("<<actual.first<<", "<< actual.second<<")"<<" Costo: " <<  costo[actual]<<"\n";
-        std::cout<<"***********************HIJOS*****************************\n";
-        
+
         if(actual == goal){
             break;
         }
+
+        std::cout<<"***********************HIJOS*****************************\n";
 
         std::pair<int,int> arriba = {actual.first-1, actual.second};
         std::pair<int,int> abajo = {actual.first+1, actual.second};
@@ -88,12 +107,28 @@ void costoUniforme(std::vector<std::vector<int>> maze, std::pair<int,int> start,
         generarHijoUniforme(izquierda, actual, cola, costo, parents);
     }
 
-    std::cout<<"\nCosto TOTAl Uniforme: " << costo[goal]<<"\n";
-    while(goal != start){
-        std::cout<<"Costo: "<<costo[goal]<<" ("<<goal.first<< ", "<< goal.second<< ") -> \n"; 
-        goal = parents[goal]; 
+    generarRutaUniforme(parents,costo);
+}
+
+void generarRutaAStar(std::map<std::pair<int,int>, std::pair<int,int>>& parents, std::map<std::pair<int,int>, int>& costo ){
+    std::stack<std::pair<int,int>> orden;
+    std::pair<int,int> tempGoal = goal;
+    while(tempGoal != start){
+        std::pair<int,int> temp = tempGoal;
+        orden.push(temp);
+        tempGoal = parents[tempGoal];
     }
-    std::cout<<"("<< start.first<<" "<< start.second<<")\n"; 
+    orden.push(start);
+    
+    std::cout<<"\n********************RUTA OPTIMA**************************\n";
+    int count = 1;
+    while(!orden.empty()){
+        int hN = abs(orden.top().first - goal.first) + abs(orden.top().second - goal.second);
+        int gN = costo[orden.top()];
+        std::cout<<count++<<". Costo: "<<gN<<" + "<<hN<<" = "<< gN+hN<<"  Nodo: ("<<orden.top().first<< ", "<< orden.top().second<< ") -> \n"; 
+        orden.pop();
+    }
+    std::cout<<"FIN";
 }
 
 void generarHijoAStar(std::pair<int,int>& hijo, std::pair<int,int>& actual, auto& cola, std::map<std::pair<int,int>, int>& costo, std::map<std::pair<int,int>, std::pair<int,int>>& parents ){
@@ -146,35 +181,29 @@ void aStar(std::vector<std::vector<int>> maze, std::pair<int,int> start, std::pa
         generarHijoAStar(izquierda, actual, cola, costo, parents);
     }
 
-    std::cout<<"\nCosto TOTAl A*: " << costo[goal]<<"\n";
-    while(goal != start){
-        std::cout<<"Costo: "<<costo[goal]<<" ("<<goal.first<< ", "<< goal.second<< ") -> \n"; 
-        goal = parents[goal]; 
-    }
-    std::cout<<"("<< start.first<<" "<< start.second<<")\n";
+    generarRutaAStar(parents,costo);
 }
 
 
 int main(){
-
     struct timeval startTime, stop;
     double secs = 0;
     maze = llenarLaberinto();
 
-    
+    //Costo Uniforme
     gettimeofday(&startTime, NULL);
     costoUniforme(maze, start, goal);
 
     gettimeofday(&stop, NULL);
     secs = (double)(stop.tv_usec - startTime.tv_usec) / 1000000 + (double)(stop.tv_sec - startTime.tv_sec);
-    printf("\nTiempo de Cálculo Algoritmo Uniforme: %f\n", secs);
-    
-    std::cout<<"\n\n";
+    printf("\n\nTiempo de Cálculo Algoritmo Uniforme: %f\n", secs);
+
+    /* //A*
     gettimeofday(&startTime, NULL);
     aStar(maze, start, goal);
 
     gettimeofday(&stop, NULL);
     secs = (double)(stop.tv_usec - startTime.tv_usec) / 1000000 + (double)(stop.tv_sec - startTime.tv_sec);
-    printf("\nTiempo de Cálculo Algoritmo A*: %f\n", secs);
-    
+    printf("\n\nTiempo de Cálculo Algoritmo A*: %f\n", secs);
+    */
 }
